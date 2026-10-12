@@ -1,0 +1,761 @@
+/* 星空撮影プランナー — 製品専用デザインシステム。
+ *
+ * 世界観: 星景写真家の「露光帯／夜のタイムライン」。夜を1本のフィルム帯に引き伸ばし、
+ *   天の川の高度推移を露光として読む。半球ドーム/アストロラーベ/縦積みカードは採らない。
+ * 視覚言語: sans一貫＋等幅数字。近黒の夜地×シアン(hue198)の星明かり、ピークだけ琥珀(hue35)。
+ *   フィルム・パーフォレーション、大文字トラッキングの刻印ラベル、灰影でなく発光で奥行き。
+ */
+
+/* ── 機能的リセット（視覚を持たない基礎） ─────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+* {
+  margin: 0;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── テーマトークン ───────────────────────────────────────────── */
+:root {
+  /* light（星図の計画シート・薄明の紙面） */
+  --bg: #e9edf4;
+  --bg-grain: #dfe5ee;
+  --panel: #f7f9fc;
+  --panel-2: #eef2f8;
+  --ink: #141b26;
+  --muted: #495669;
+  --line: #c4cde874;
+  --line-solid: #cbd4e6;
+  --accent: #0b6f82; /* 大字/装飾 */
+  --accent-ink: #075a6b; /* 本文リンク AA */
+  --accent-soft: #0b6f8218;
+  --amber: #a55b12;
+  --amber-ink: #8a4a08;
+  --night: #cfd9ea; /* 帯の天体夜（light では明るい紙面上の“濃い時間”をブロンズ寄りに） */
+  --twilight: #e6ddca;
+  --milky-0: #0b6f8244;
+  --milky-1: #0b6f8208;
+  --milky-line: #0a6274;
+  --grid: #b9c3d8;
+  --grid-ink: #3d4859;
+  --glow: 0 1px 0 #ffffff;
+  --shadow: 0 8px 26px -18px rgba(20, 27, 38, 0.4);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #070b12;
+    --bg-grain: #0a0f18;
+    --panel: #0e1622;
+    --panel-2: #101a28;
+    --ink: #e9eef7;
+    --muted: #96a6bd;
+    --line: #2b3a4f66;
+    --line-solid: #24303f;
+    --accent: #7fe1ef;
+    --accent-ink: #8fe6f2;
+    --accent-soft: #7fe1ef14;
+    --amber: #ffb454;
+    --amber-ink: #ffc074;
+    --night: #0a1420;
+    --twilight: #142236;
+    --milky-0: #57cfe255;
+    --milky-1: #57cfe205;
+    --milky-line: #86e4f1;
+    --grid: #22303f;
+    --grid-ink: #7a8aa0;
+    --glow: 0 0 22px #57cfe233;
+    --shadow: 0 20px 50px -28px rgba(0, 0, 0, 0.85);
+    color-scheme: dark;
+  }
+}
+/* 明示切替（OS設定より優先） */
+:root[data-theme="light"] {
+  --bg: #e9edf4;
+  --bg-grain: #dfe5ee;
+  --panel: #f7f9fc;
+  --panel-2: #eef2f8;
+  --ink: #141b26;
+  --muted: #495669;
+  --line: #c4cde874;
+  --line-solid: #cbd4e6;
+  --accent: #0b6f82;
+  --accent-ink: #075a6b;
+  --accent-soft: #0b6f8218;
+  --amber: #a55b12;
+  --amber-ink: #8a4a08;
+  --night: #cfd9ea;
+  --twilight: #e6ddca;
+  --milky-0: #0b6f8244;
+  --milky-1: #0b6f8208;
+  --milky-line: #0a6274;
+  --grid: #b9c3d8;
+  --grid-ink: #3d4859;
+  --glow: 0 1px 0 #ffffff;
+  --shadow: 0 8px 26px -18px rgba(20, 27, 38, 0.4);
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #070b12;
+  --bg-grain: #0a0f18;
+  --panel: #0e1622;
+  --panel-2: #101a28;
+  --ink: #e9eef7;
+  --muted: #96a6bd;
+  --line: #2b3a4f66;
+  --line-solid: #24303f;
+  --accent: #7fe1ef;
+  --accent-ink: #8fe6f2;
+  --accent-soft: #7fe1ef14;
+  --amber: #ffb454;
+  --amber-ink: #ffc074;
+  --night: #0a1420;
+  --twilight: #142236;
+  --milky-0: #57cfe255;
+  --milky-1: #57cfe205;
+  --milky-line: #86e4f1;
+  --grid: #22303f;
+  --grid-ink: #7a8aa0;
+  --glow: 0 0 22px #57cfe233;
+  --shadow: 0 20px 50px -28px rgba(0, 0, 0, 0.85);
+  color-scheme: dark;
+}
+
+/* ── ベース ───────────────────────────────────────────────────── */
+body {
+  font-family:
+    "Hiragino Sans",
+    "Hiragino Kaku Gothic ProN",
+    "Noto Sans JP",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  color: var(--ink);
+  /* テーマ色を background-color に持たせる（配色切替を検出可能にする＋グラデの下地）。
+     視覚は下の background-image のグラデが主。 */
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(120% 80% at 82% -10%, var(--accent-soft), transparent 60%),
+    linear-gradient(180deg, var(--bg-grain), var(--bg) 34%);
+  background-attachment: fixed;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  padding: clamp(16px, 4vw, 40px) clamp(14px, 5vw, 48px) 64px;
+}
+#result,
+.masthead,
+.lede,
+.controls,
+.colophon {
+  max-width: 760px;
+  margin-inline: auto;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+a {
+  color: var(--accent-ink);
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 2.5px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--ink);
+  color: var(--bg);
+  padding: 10px 16px;
+  border-radius: 0 0 10px 0;
+  font-weight: 700;
+  z-index: 20;
+}
+.skip:focus {
+  left: 0;
+}
+
+/* ── マストヘッド ─────────────────────────────────────────────── */
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line-solid);
+  margin-bottom: 22px;
+}
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wordmark__glyph {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(150deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--line-solid);
+  box-shadow: var(--glow);
+}
+.starmark-path {
+  fill: var(--accent);
+}
+.wordmark__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.wordmark__ja {
+  font-size: clamp(1.15rem, 3.6vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.wordmark__en {
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line-solid);
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    transform 0.1s;
+}
+.theme-toggle:hover {
+  border-color: var(--accent);
+}
+.theme-toggle:active {
+  transform: translateY(1px);
+}
+.theme-toggle__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 30%, var(--accent), transparent 72%),
+    var(--amber);
+  box-shadow: var(--glow);
+}
+
+.lede {
+  max-width: 760px;
+  margin: 0 auto 26px;
+  color: var(--muted);
+  font-size: clamp(0.95rem, 2.4vw, 1.05rem);
+}
+.lede b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* ── 操作 ─────────────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 18px;
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--line-solid);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 22px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 200px;
+}
+.field--manual {
+  flex-basis: 100%;
+}
+.field label {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+.select-wrap {
+  position: relative;
+}
+.select-wrap::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+select,
+input[type="date"],
+.manual-inputs input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 11px;
+  border: 1px solid var(--line-solid);
+  background: var(--panel-2);
+  color: var(--ink);
+  font-size: 1rem;
+  appearance: none;
+}
+select {
+  padding-right: 38px;
+  cursor: pointer;
+}
+.manual-inputs {
+  display: flex;
+  gap: 10px;
+}
+.manual-inputs input {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 結果 ─────────────────────────────────────────────────────── */
+.result {
+  margin-bottom: 26px;
+}
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line-solid);
+  color: var(--muted);
+}
+.notice--error {
+  border-color: var(--amber);
+  color: var(--ink);
+}
+.notice__mark {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--amber);
+  color: #1a0f00;
+  font-weight: 800;
+  flex: none;
+}
+
+.plan {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* 今夜のおすすめ（大リードアウト） */
+.answer {
+  position: relative;
+  padding: 22px 22px 24px;
+  border-radius: 18px;
+  background:
+    radial-gradient(140% 120% at 90% -30%, var(--accent-soft), transparent 55%),
+    linear-gradient(165deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--line-solid);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.answer::before {
+  /* フィルムのパーフォレーション（署名モチーフ）: シアン寄りの明確な刻み */
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 9px;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 10px,
+    color-mix(in srgb, var(--accent) 30%, var(--line-solid)) 10px 18px
+  );
+  opacity: 0.85;
+}
+.answer--go {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line-solid));
+}
+/* 見頃なし = 静かな「見送り」状態（エラーでも未完成でもない専用トーン） */
+.answer--nogo {
+  border-color: var(--line-solid);
+}
+.answer--nogo::before {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 10px,
+    var(--line-solid) 10px 18px
+  );
+  opacity: 0.5;
+}
+.answer__nogo-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  margin-bottom: 6px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  border: 1px solid var(--line-solid);
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.answer__nogo-tag::before {
+  content: "☾";
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.answer--nogo .answer__num {
+  color: var(--ink);
+}
+.answer__eyebrow {
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.answer__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 18px;
+}
+.answer__line--nogo {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.answer__seg {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.answer__num {
+  font-size: clamp(1.9rem, 7vw, 2.9rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  text-shadow: var(--glow);
+}
+.answer--go .answer__seg--time .answer__num {
+  color: var(--accent);
+}
+.answer__unit {
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.answer__line--nogo .answer__num {
+  font-size: clamp(1.3rem, 5vw, 1.9rem);
+}
+.answer__sep {
+  align-self: stretch;
+  width: 1px;
+  background: var(--line-solid);
+  margin-block: 2px;
+}
+
+/* ファクト行 */
+.facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.facts__item {
+  padding: 14px 16px;
+  border-radius: 13px;
+  background: var(--panel);
+  border: 1px solid var(--line-solid);
+}
+/* 月明かりが強い夜 = 撮影条件が悪い旨を琥珀で視覚強調する状態デザイン */
+.facts__item--warn {
+  border-color: color-mix(in srgb, var(--amber) 55%, var(--line-solid));
+  background: color-mix(in srgb, var(--amber) 8%, var(--panel));
+}
+.facts__item--warn dt {
+  color: var(--amber-ink);
+}
+.facts__item dt {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.facts__item dd b {
+  font-weight: 800;
+}
+.facts__sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+/* ── 夜のタイムライン（主計器） ───────────────────────────────── */
+.timeline {
+  padding: 16px 16px 12px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--line-solid);
+  box-shadow: var(--shadow);
+}
+.timeline__cap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.timeline__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-weight: 600;
+}
+.lg {
+  display: inline-block;
+  width: 16px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.lg--milky {
+  background: var(--milky-line);
+}
+.lg--win {
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
+  border: 1px solid var(--accent);
+}
+.lg--moon {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--amber) 0 2px,
+    transparent 2px 5px
+  );
+}
+.timeline__scroll {
+  overflow-x: auto;
+}
+.timeline__svg {
+  width: 100%;
+  min-width: 520px;
+  height: auto;
+  display: block;
+}
+.timeline__note {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+/* SVG 要素の配色 */
+.tl-frame {
+  fill: var(--night);
+  stroke: var(--line-solid);
+}
+.tl-twilight {
+  fill: var(--twilight);
+  opacity: 0.85;
+}
+.tl-window {
+  fill: color-mix(in srgb, var(--accent) 16%, transparent);
+  stroke: color-mix(in srgb, var(--accent) 55%, transparent);
+  stroke-width: 1;
+}
+.tl-grid {
+  stroke: var(--grid);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+.tl-gridtext,
+.tl-axis {
+  fill: var(--grid-ink);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.tl-area {
+  opacity: 0.9;
+}
+.grad-milky-0 {
+  stop-color: var(--milky-0);
+}
+.grad-milky-1 {
+  stop-color: var(--milky-1);
+}
+.tl-line {
+  stroke: var(--milky-line);
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(
+    0 0 5px color-mix(in srgb, var(--milky-line) 45%, transparent)
+  );
+}
+.tl-peak {
+  stroke: var(--amber);
+  stroke-width: 1.4;
+  stroke-dasharray: 3 3;
+}
+.tl-peakdot {
+  fill: var(--amber);
+  stroke: var(--panel);
+  stroke-width: 2;
+}
+.tl-peaklabel {
+  fill: var(--amber-ink);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+}
+.moonhatch-line {
+  stroke: var(--amber);
+  stroke-width: 1.4;
+}
+.perf-cell {
+  fill: color-mix(in srgb, var(--accent) 34%, var(--grid));
+}
+
+/* ── フッター ─────────────────────────────────────────────────── */
+.colophon {
+  margin-top: 30px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line-solid);
+  color: var(--muted);
+  font-size: 0.84rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.colophon__links a {
+  font-weight: 600;
+}
+
+/* ── レスポンシブ ─────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .facts {
+    grid-template-columns: 1fr;
+  }
+  .answer__sep {
+    display: none;
+  }
+  .answer__line {
+    gap: 14px;
+  }
+}
+@media (max-width: 380px) {
+  /* 最狭幅: 英字サブタイトルの字間を詰めてワードマーク列の押し出しを防ぐ */
+  .wordmark__en {
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+  }
+}
+
+/* ── 汎用の内容ページ（about） ────────────────────────────────── */
+.doc {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.doc h1 {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.doc .doc__back {
+  display: inline-block;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+.doc h2 {
+  font-size: 1.1rem;
+  margin: 26px 0 8px;
+  padding-left: 12px;
+  border-left: 3px solid var(--accent);
+}
+.doc p,
+.doc li {
+  color: var(--muted);
+}
+.doc ul {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}

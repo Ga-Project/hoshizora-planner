@@ -9,3 +9,11 @@ const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 /** 公開サイトのルート URL（末尾スラッシュ付き。trailingSlash: true の出力に合わせる）。 */
 export const SITE_URL = `${ORIGIN}${BASE_PATH}/`;
+
+/** SNS カード画像（public/og.png）。url は metadataBase 起点の相対。 */
+export const OG_IMAGE = {
+  url: "og.png",
+  width: 1200,
+  height: 630,
+  alt: "星空撮影プランナーの表示例。東京・7月15日の夜、天の川の中心は21:50ごろ南の高度25度に見える",
+};

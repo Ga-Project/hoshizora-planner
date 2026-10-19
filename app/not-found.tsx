@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
   // layout の canonical はトップ用。404 はトップの複製ではないので外す。
   alternates: { canonical: null },
+  openGraph: null,
+  twitter: null,
 };
 
 // サブパス配信では絶対パス "/" がドメイン直下に解決されてしまうため、

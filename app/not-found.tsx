@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "404 — 星空撮影プランナー",
   robots: { index: false, follow: false },
+  // layout の canonical はトップ用。404 はトップの複製ではないので外す。
+  alternates: { canonical: null },
 };
 
 // サブパス配信では絶対パス "/" がドメイン直下に解決されてしまうため、

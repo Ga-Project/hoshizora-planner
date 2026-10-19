@@ -1,9 +1,26 @@
 import type { Metadata } from "next";
+import { OG_IMAGE, SITE_URL } from "../site";
+
+const title = "計算の考え方・免責・プライバシー — 星空撮影プランナー";
+const description =
+  "星空撮影プランナーの天文計算の考え方、可視の目安としての免責事項、アクセス解析（cookieなし）についてのプライバシーの説明。";
 
 export const metadata: Metadata = {
-  title: "計算の考え方・免責・プライバシー — 星空撮影プランナー",
-  description:
-    "星空撮影プランナーの天文計算の考え方、可視の目安としての免責事項、アクセス解析（cookieなし）についてのプライバシーの説明。",
+  title,
+  description,
+  // layout の canonical / og:url はトップ用。about は独立ページなので自身を指す。
+  alternates: { canonical: "/about/" },
+  // openGraph / twitter は layout と deep-merge されず丸ごと置換されるため、全項目を書く。
+  openGraph: {
+    title,
+    description,
+    type: "website",
+    locale: "ja_JP",
+    siteName: "星空撮影プランナー",
+    url: `${SITE_URL}about/`,
+    images: [OG_IMAGE],
+  },
+  twitter: { card: "summary_large_image", title, description, images: [OG_IMAGE] },
 };
 
 export default function About() {

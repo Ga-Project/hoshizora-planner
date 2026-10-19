@@ -1,18 +1,11 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
-import { SITE_URL } from "./site";
+import { OG_IMAGE, SITE_URL } from "./site";
 
 const title = "星空撮影プランナー — 天の川が今夜いつ・どの方角に見えるか";
 const description =
   "撮影地と日付を選ぶだけで、天の川の中心が今夜いつ・どの方角に・どの高さで見えるかを一画面で表示。月明かりの影響もわかる、日本語の星景撮影プランナー（ブラウザ完結・登録不要）。";
-
-const ogImage = {
-  url: "og.png",
-  width: 1200,
-  height: 630,
-  alt: "星空撮影プランナー — 天の川の中心が今夜いつ・どの方角に見えるか",
-};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -36,9 +29,9 @@ export const metadata: Metadata = {
     locale: "ja_JP",
     siteName: "星空撮影プランナー",
     url: SITE_URL,
-    images: [ogImage],
+    images: [OG_IMAGE],
   },
-  twitter: { card: "summary_large_image", title, description, images: [ogImage] },
+  twitter: { card: "summary_large_image", title, description, images: [OG_IMAGE] },
   robots: { index: true, follow: true },
 };
 
